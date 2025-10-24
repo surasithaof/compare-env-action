@@ -14,11 +14,7 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test:full": "tsx test-runner.ts full",
-    "test:check": "tsx test-runner.ts check",
-    "test:interactive": "tsx test-runner.ts interactive",
     "type-check": "tsc --noEmit",
-    "lint": "tsx test-runner.ts lint",
     "clean": "rm -rf dist coverage"
   },
   "keywords": [
@@ -45,10 +41,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
+    "@vitest/coverage-v8": "^4.0.3",
+    "@vitest/ui": "^1.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.0.0",
     "typescript": "^5.9.3",
-    "vitest": "^1.0.0",
-    "@vitest/ui": "^1.0.0"
+    "vite": "^7.1.12",
+    "vitest": "^4.0.3"
   }
 }
