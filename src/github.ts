@@ -1,3 +1,5 @@
+import { GithubDiff, LatestRelease } from "./types";
+
 class GithubAPI {
   private token: string;
   private baseUrl: string;
@@ -17,23 +19,23 @@ class GithubAPI {
 
     if (!response.ok) {
       throw new Error(
-        `GitHub API request failed: ${response.status} ${response.statusText}`
+        `GitHub API request failed: ${response.status} ${response.statusText}`,
       );
     }
 
     return response.json() as Promise<T>;
   }
 
-  async getLatestRelease(repo: string): Promise<{ tag_name: string }> {
-    return this.request(`/repos/${repo}/releases/latest`);
+  async getLatestRelease(repo: string): Promise<LatestRelease> {
+    return this.request<LatestRelease>(`/repos/${repo}/releases/latest`);
   }
 
   async compareReferences(
     repo: string,
     base: string,
-    head: string
-  ): Promise<{ files: { filename: string; patch: string }[] }> {
-    return this.request(`/repos/${repo}/compare/${base}...${head}`);
+    head: string,
+  ): Promise<GithubDiff> {
+    return this.request<GithubDiff>(`/repos/${repo}/compare/${base}...${head}`);
   }
 }
 

@@ -1,93 +1,104 @@
 import { DIFF_HEADERS, DIFF_PREFIXES } from "./constant";
 import type { EnvChange } from "./types";
 
-export function parseChanges(diffContent: string) {
+function parseLine(line: string) {
+  const envLine = line.substring(1); // Remove the + prefix
+  if (envLine.trim() && envLine.includes("=")) {
+    const [key, ...value] = envLine.split("=");
+    return { key: key!.trim(), value: value.join("=").trim() };
+  }
+  return null;
+}
+
+function isDiffHeader(line: string) {
+  return DIFF_HEADERS.some((header: string) => line.startsWith(header));
+}
+
+function parseDiff(added: Map<string, string>, removed: Map<string, string>) {
+  // find the same value that in added and removed,
+  // it's likely modified variables.
+  const commonKeys = new Map<string, boolean>();
+  added.forEach((_, added) => {
+    removed.forEach((_, removed) => {
+      if (added === removed) {
+        commonKeys.set(added, true);
+      }
+    });
+  });
+
+  // sometimes the same key can be added and removed with the same value
+  // e.g. new line added and then removed, or changed line that has the same value
+  // so we need to filter those out.
+  const commonKVs = new Map<string, boolean>();
+  added.forEach((addedVal, addedKey) => {
+    removed.forEach((removedVal, removedKey) => {
+      if (addedKey === removedKey && addedVal === removedVal) {
+        commonKVs.set(addedKey, true);
+      }
+    });
+  });
+
+  const modified = new Map<string, { oldValue: string; newValue: string }>();
+  commonKeys.forEach((_, key) => {
+    if (commonKVs.has(key)) {
+      // skip same key-value pairs as they are not modified
+      return;
+    }
+    const newValue = added.get(key)!;
+    const oldValue = removed.get(key)!;
+    modified.set(key, { oldValue, newValue });
+  });
+
+  // Remove duplicates from added
+  added.forEach((_, key) => {
+    if (commonKeys.has(key) || commonKVs.has(key)) {
+      added.delete(key);
+    }
+  });
+
+  // Remove duplicates from removed
+  removed.forEach((_, key) => {
+    if (commonKeys.has(key) || commonKVs.has(key)) {
+      removed.delete(key);
+    }
+  });
+
+  return { added, removed, modified };
+}
+
+export function parseChanges(diffContent: string): EnvChange {
   if (!diffContent) {
     throw new Error("Invalid diff content provided");
   }
+
+  // Split diff content into lines
   const lines = diffContent.replaceAll("\\n", "\n").split("\n");
 
-  const changes: EnvChange = {
-    added: [],
-    removed: [],
-    modified: [],
-  };
+  const added = new Map<string, string>();
+  const removed = new Map<string, string>();
 
   for (const line of lines) {
     // Skip diff headers and context lines
-    if (DIFF_HEADERS.some((header: string) => line.startsWith(header))) {
+    if (isDiffHeader(line)) {
       continue;
     }
 
     // Parse added lines (start with +)
     if (line.startsWith(DIFF_PREFIXES.added)) {
-      const envLine = line.substring(1); // Remove the + prefix
-      if (envLine.trim() && envLine.includes("=")) {
-        const [key, ...value] = envLine.split("=");
-        changes.added.push({ key: key!.trim(), value: value.join("=").trim() });
+      const kv = parseLine(line);
+      if (kv) {
+        added.set(kv.key, kv.value);
       }
     }
 
     // Parse removed lines (start with -)
     if (line.startsWith(DIFF_PREFIXES.removed)) {
-      const envLine = line.substring(1); // Remove the - prefix
-      if (envLine.trim() && envLine.includes("=")) {
-        const [key, ...value] = envLine.split("=");
-        changes.removed.push({
-          key: key!.trim(),
-          value: value.join("=").trim(),
-        });
+      const kv = parseLine(line);
+      if (kv) {
+        removed.set(kv.key, kv.value);
       }
     }
   }
 
-  // find tha same value that in added and removed,
-  // it's likely modified variables.
-  const commonKeys = changes.added.filter((addedItem) =>
-    changes.removed.some((removedItem) => removedItem.key === addedItem.key),
-  );
-
-  // sometimes the same key can be added and removed with the same value
-  // e.g. new line added and then removed, or changed line that has the same value
-  // so we need to filter those out.
-  const commonKVs = changes.added.filter((addedItem) =>
-    changes.removed.some(
-      (removedItem) =>
-        removedItem.key === addedItem.key &&
-        removedItem.value === addedItem.value,
-    ),
-  );
-
-  changes.modified = commonKeys
-    .filter(
-      (item) =>
-        !commonKVs.some(
-          (dup) => dup.key === item.key && dup.value === item.value,
-        ),
-    )
-    .map((addedItem) => {
-      // Find the corresponding removed item to show both old and new values
-      const removedItem = changes.removed.find(
-        (removedItem) => removedItem.key === addedItem.key,
-      );
-      return {
-        key: addedItem.key,
-        oldValue: removedItem ? removedItem.value : "",
-        newValue: addedItem.value,
-      };
-    });
-
-  changes.added = changes.added.filter(
-    (addedItem) =>
-      !commonKeys.map((item) => item.key).includes(addedItem.key) &&
-      !commonKVs.map((item) => item.key).includes(addedItem.key),
-  );
-
-  changes.removed = changes.removed.filter(
-    (removedItem) =>
-      !commonKeys.map((item) => item.key).includes(removedItem.key) &&
-      !commonKVs.map((item) => item.key).includes(removedItem.key),
-  );
-
-  return changes;
+  return parseDiff(added, removed);
 }

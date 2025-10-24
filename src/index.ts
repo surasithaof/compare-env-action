@@ -34,6 +34,7 @@ async function main() {
     // if baseRef is "latest", fetch the latest release tag
     if (baseRef === DEFAULT.baseRef) {
       const latestRelease = await ghClient.getLatestRelease(repo);
+      console.debug(`Latest release tag: ${JSON.stringify(latestRelease)}`);
       baseRef = latestRelease.tag_name;
     }
 

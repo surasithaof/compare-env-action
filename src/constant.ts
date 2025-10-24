@@ -4,9 +4,6 @@ export const DEFAULT = {
   fileToCompare: ".env.example",
 };
 
-/**
- * Constants for diff parsing
- */
 export const DIFF_PREFIXES = {
   added: "+",
   removed: "-",
