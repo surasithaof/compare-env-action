@@ -14,7 +14,8 @@ describe("diff.test.ts - Diff Utils Test Suite", () => {
     const diffText = `@@ -1 +1 @@
 This is not a valid diff format
 # SOME_COMMENT_ENV=true
-+ SOME_INVALID_LINE`;
++ SOME_INVALID_LINE
+- ANOTHER_INVALID_LINE`;
     const changes: EnvChange = parseChanges(diffText);
     expect(changes.added.size).toBe(0);
     expect(changes.removed.size).toBe(0);
