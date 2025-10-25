@@ -1,58 +1,73 @@
-import { DEFAULT, ERRORS } from "./constant";
+import { parseArgs } from "./cli";
+import { DEFAULT } from "./constant";
 import { parseChanges } from "./diff";
 import { GithubAPI } from "./github";
 import { generateMarkdown } from "./markdown";
 
-function validateArgs() {
-  const args = process.argv.slice(2);
+/**
+ * Compares a specific file between two references in a GitHub repository
+ * and generates a markdown representation of the changes.
+ *
+ * @param ghToken - The GitHub token for authentication.
+ * @param repo - The repository in the format "owner/repo".
+ * @param baseRef - The base reference (branch, tag, or commit SHA).
+ * @param headRef - The head reference (branch, tag, or commit SHA).
+ * @param fileToCompare - The specific file to compare.
+ * @returns A markdown string representing the changes, or undefined if no changes.
+ */
+async function compare(
+  ghToken: string,
+  repo: string,
+  baseRef: string,
+  headRef: string,
+  fileToCompare: string,
+) {
+  const ghClient = new GithubAPI(ghToken);
 
-  if (!process.env.GITHUB_TOKEN) {
-    throw new Error(ERRORS.tokenMissing);
+  // if baseRef is "latest", fetch the latest release tag
+  if (baseRef === DEFAULT.baseRef) {
+    const latestRelease = await ghClient.getLatestRelease(repo);
+    console.debug(`Latest release tag: ${JSON.stringify(latestRelease)}`);
+    baseRef = latestRelease.tag_name;
   }
-  if (args.length < 1) {
-    throw new Error(ERRORS.invalidArgs);
+
+  // Get diff from GitHub API
+  const diffData = await ghClient.compareReferences(repo, baseRef, headRef);
+
+  // Find the specific file diff
+  const diff = diffData.files.find((file) => file.filename === fileToCompare);
+  if (!diff?.patch) {
+    console.log(`No changes found in ${fileToCompare} file.`);
+    return;
   }
 
-  const ghToken: string = process.env.GITHUB_TOKEN;
-  const repo: string = args[0]?.replace("https://github.com/", "") || ""; // Normalize repo format to owner/repo
-  const baseRef: string = args[1] || DEFAULT.baseRef; // Default to latest release
-  const headRef: string = args[2] || DEFAULT.headRef; // Default to master branch
-  const fileToCompare: string = args[3] || DEFAULT.fileToCompare; // Default to .env.example
+  // Parse changes
+  const changes = parseChanges(diff.patch);
 
-  if (!repo || !baseRef || !headRef || !fileToCompare) {
-    throw new Error(ERRORS.invalidArgs);
-  }
-
-  return { ghToken, repo, baseRef, headRef, fileToCompare };
+  // Generate markdown
+  return generateMarkdown(changes);
 }
 
 async function main() {
   try {
-    let { ghToken, repo, baseRef, headRef, fileToCompare } = validateArgs();
-    const ghClient = new GithubAPI(ghToken);
-
-    // if baseRef is "latest", fetch the latest release tag
-    if (baseRef === DEFAULT.baseRef) {
-      const latestRelease = await ghClient.getLatestRelease(repo);
-      console.debug(`Latest release tag: ${JSON.stringify(latestRelease)}`);
-      baseRef = latestRelease.tag_name;
-    }
+    // Parse command-line arguments
+    let { ghToken, repo, baseRef, headRef, fileToCompare } = parseArgs();
 
     console.log(`Compare file: ${fileToCompare}`);
     console.log(`Comparing ${baseRef}...${headRef}`);
 
-    const diffData = await ghClient.compareReferences(repo, baseRef, headRef);
-    const diff = diffData.files.find((file) => file.filename === fileToCompare);
-    if (!diff?.patch) {
-      console.log(`No changes found in ${fileToCompare} file.`);
-      process.exit(0);
+    const markdown = await compare(
+      ghToken,
+      repo,
+      baseRef,
+      headRef,
+      fileToCompare,
+    );
+
+    if (!markdown) {
+      console.log("No changes detected.");
+      return;
     }
-
-    // Parse changes
-    const changes = parseChanges(diff.patch);
-
-    // Generate markdown
-    const markdown = generateMarkdown(changes);
 
     // Output to stdout
     console.log(markdown);

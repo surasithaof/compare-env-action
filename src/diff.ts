@@ -14,7 +14,10 @@ function isDiffHeader(line: string) {
   return DIFF_HEADERS.some((header: string) => line.startsWith(header));
 }
 
-function parseDiff(added: Map<string, string>, removed: Map<string, string>) {
+function parseDiffEntries(
+  added: Map<string, string>,
+  removed: Map<string, string>,
+) {
   // find the same value that in added and removed,
   // it's likely modified variables.
   const commonKeys = new Map<string, boolean>();
@@ -66,6 +69,11 @@ function parseDiff(added: Map<string, string>, removed: Map<string, string>) {
   return { added, removed, modified };
 }
 
+/**
+ * Parses the diff content to extract environment variable changes.
+ * @param diffContent - parse the diff content string to extract environment variable changes
+ * @returns An object containing added, removed, and modified environment variables.
+ */
 export function parseChanges(diffContent: string): EnvChange {
   if (!diffContent) {
     throw new Error("Invalid diff content provided");
@@ -100,5 +108,18 @@ export function parseChanges(diffContent: string): EnvChange {
     }
   }
 
-  return parseDiff(added, removed);
+  return parseDiffEntries(added, removed);
+}
+
+/**
+ * Checks if there are any changes in the EnvChange object.
+ * @param changes - An object containing added, removed, and modified environment variables.
+ * @returns A boolean indicating if there are any changes.
+ */
+export function hasChanges(changes: EnvChange): boolean {
+  return (
+    changes.added.size > 0 ||
+    changes.removed.size > 0 ||
+    changes.modified.size > 0
+  );
 }

@@ -13,6 +13,16 @@ describe("markdown.test.ts - Markdown Utils Test Suite", () => {
     expect(markdown).toBe("No changes detected.\n\n");
   });
 
+  test("should return empty string if no changes and emptyIfNoChanges is true", () => {
+    const changes: EnvChange = {
+      added: new Map(),
+      removed: new Map(),
+      modified: new Map(),
+    };
+    const markdown = generateMarkdown(changes, "", true);
+    expect(markdown).toBe("");
+  });
+
   test("should generate markdown for added variables", () => {
     const changes: EnvChange = {
       added: new Map([["NEW_VAR", "new_value"]]),

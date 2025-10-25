@@ -1,14 +1,25 @@
 import { GithubDiff, LatestRelease } from "./types";
 
+/**
+ * Github client to call to Github API
+ */
 class GithubAPI {
   private token: string;
   private baseUrl: string;
 
+  /**
+   * @param token - Github token for authentication to access the repository
+   */
   constructor(token: string) {
     this.token = token;
     this.baseUrl = "https://api.github.com";
   }
 
+  /**
+   * Make a GET request to Github API
+   * @param endpoint - endpoint to request to Github API with method GET
+   * @returns response data from Github API
+   */
   async request<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
@@ -26,10 +37,22 @@ class GithubAPI {
     return response.json() as Promise<T>;
   }
 
+  /**
+   * Get the latest release information from the repository
+   * @param repo - repository name informat `owner/repo`
+   * @returns latest release information from the repository
+   */
   async getLatestRelease(repo: string): Promise<LatestRelease> {
     return this.request<LatestRelease>(`/repos/${repo}/releases/latest`);
   }
 
+  /**
+   * Compare two references in the repository
+   * @param repo - repository name in format `owner/repo`
+   * @param base - base reference (branch, tag, or commit SHA)
+   * @param head - head reference (branch, tag, or commit SHA)
+   * @returns comparison data between the two references
+   */
   async compareReferences(
     repo: string,
     base: string,
