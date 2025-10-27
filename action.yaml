@@ -3,23 +3,23 @@ description: "Compares environment configuration changes for release management 
 inputs:
   github-token:
     description: "GitHub token with permissions to access the repository"
-    required: true
+    required: false
     default: "${{ github.token }}"
   repository:
     description: "The repository to compare environments in the format 'owner/repo'"
-    required: true
+    required: false
     default: "${{ github.repository }}"
   head-ref:
     description: "The head ref to compare against (e.g., 'main' or 'master')"
-    required: true
+    required: false
     default: "master"
   base-ref:
     description: "The base ref to compare (e.g., the feature or release branch)"
-    required: true
+    required: false
     default: "latest"
   env-file-path:
     description: "Path to the environment configuration file to compare"
-    required: true
+    required: false
     default: ".env.example"
 outputs:
   has-changes:

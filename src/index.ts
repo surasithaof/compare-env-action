@@ -71,8 +71,10 @@ async function compare(
 
 async function main() {
   try {
-    const { ghToken, repo, baseRef, headRef, fileToCompare } = parseArgs();
-    // const { ghToken, repo, baseRef, headRef, fileToCompare } = setupAction();
+    const { ghToken, repo, baseRef, headRef, fileToCompare } = process.env
+      .GITHUB_ACTIONS
+      ? setupAction()
+      : parseArgs();
 
     console.log(`Repository: ${repo}`);
     console.log(`Compare file: ${fileToCompare}`);
@@ -87,20 +89,20 @@ async function main() {
     );
 
     if (!hasChanges(changes)) {
-      core.setOutput("has-changes", "false");
+      process.env.GITHUB_ACTIONS && core.setOutput("has-changes", "false");
       console.log("No changes detected.");
       return;
     }
 
     const changelog = generateMarkdown(changes);
-    core.setOutput("has-changes", "true");
-    core.setOutput("changelog", changelog);
+    process.env.GITHUB_ACTIONS && core.setOutput("has-changes", "true");
+    process.env.GITHUB_ACTIONS && core.setOutput("changelog", changelog);
 
     console.log("Changelog:");
     console.log(changelog);
   } catch (error: any) {
     console.error(`Error processing changes: ${error.message}`);
-    core.setFailed(error.message);
+    process.env.GITHUB_ACTIONS && core.setFailed(error.message);
     process.exit(1);
   }
 }
