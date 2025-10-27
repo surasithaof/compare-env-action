@@ -1,13 +1,15 @@
 import { describe, test, expect } from "vitest";
 import { EnvChange } from "../src/types";
-import { parseChanges } from "../src/diff";
+import { hasChanges, parseAllNewEnv, parseChanges } from "../src/diff";
 
 describe("diff.test.ts - Diff Utils Test Suite", () => {
-  test("should throw if no changes detected", () => {
+  test("should reject empty diff content", () => {
     const diffText = ``;
-    expect(() => parseChanges(diffText)).toThrow(
-      "Invalid diff content provided",
-    );
+    const changes: EnvChange = parseChanges(diffText);
+
+    expect(changes.added.size).toBe(0);
+    expect(changes.removed.size).toBe(0);
+    expect(changes.modified.size).toBe(0);
   });
 
   test("should parse invalid diff format", () => {
@@ -17,6 +19,7 @@ This is not a valid diff format
 + SOME_INVALID_LINE
 - ANOTHER_INVALID_LINE`;
     const changes: EnvChange = parseChanges(diffText);
+
     expect(changes.added.size).toBe(0);
     expect(changes.removed.size).toBe(0);
     expect(changes.modified.size).toBe(0);
@@ -28,6 +31,7 @@ This is not a valid diff format
 + ANOTHER_VAR=another_value
 `;
     const changes: EnvChange = parseChanges(diffText);
+
     expect(changes.added.size).toBe(2);
     expect(changes.added.get("NEW_VAR")).toBe("new_value");
     expect(changes.added.get("ANOTHER_VAR")).toBe("another_value");
@@ -39,6 +43,7 @@ This is not a valid diff format
 - DEPRECATED_VAR=deprecated_value
 `;
     const changes: EnvChange = parseChanges(diffText);
+
     expect(changes.removed.size).toBe(2);
     expect(changes.removed.get("OLD_VAR")).toBe("old_value");
     expect(changes.removed.get("DEPRECATED_VAR")).toBe("deprecated_value");
@@ -54,6 +59,7 @@ This is not a valid diff format
 - UNCHANGED_VAR=same_value
 `;
     const changes: EnvChange = parseChanges(diffText);
+
     expect(changes.modified.size).toBe(2);
     expect(changes.modified.get("CHANGED_VAR")).toEqual({
       oldValue: "old_value",
@@ -63,5 +69,29 @@ This is not a valid diff format
       oldValue: "123",
       newValue: "456",
     });
+  });
+
+  test("should parse file as all new variables", () => {
+    const diffText = `@@
+# SOME_COMMENT_ENV=true
+FIRST_VAR=first_value
+SECOND_VAR=second_value
+THIRD_VAR=third_value
+`;
+    const changes: EnvChange = parseAllNewEnv(diffText);
+
+    expect(changes.added.size).toBe(3);
+    expect(changes.added.get("FIRST_VAR")).toBe("first_value");
+    expect(changes.added.get("SECOND_VAR")).toBe("second_value");
+    expect(changes.added.get("THIRD_VAR")).toBe("third_value");
+  });
+
+  test("should return true for hasChanges when there are added, removed, or modified variables", () => {
+    const added = new Map<string, string>([["NEW_VAR", "new_value"]]);
+    const removed = new Map<string, string>();
+    const modified = new Map<string, { oldValue: string; newValue: string }>();
+    const changes: EnvChange = { added, removed, modified };
+
+    expect(hasChanges(changes)).toBe(true);
   });
 });

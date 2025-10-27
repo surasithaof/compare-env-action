@@ -27,7 +27,7 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
       expect(response.headers["Accept"]).toBe("application/vnd.github.v3+json");
     });
 
-    test("should throw error on non-ok response", async () => {
+    test("should return null for 404 response", () => {
       vi.restoreAllMocks();
       global.fetch = vi.fn().mockImplementation(() => {
         return Promise.resolve({
@@ -38,8 +38,24 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
       });
 
       const github = new GithubAPI(mockToken);
-      await expect(github.request<any>("/invalid-endpoint")).rejects.toThrow(
-        "GitHub API request failed: 404 Not Found",
+      const response = github.request<any>("/invalid-endpoint");
+      expect(response).resolves.toBeNull();
+    });
+
+    test("should throw error for non-OK response", () => {
+      vi.restoreAllMocks();
+      global.fetch = vi.fn().mockImplementation(() => {
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          statusText: "Internal Server Error",
+        });
+      });
+
+      const github = new GithubAPI(mockToken);
+      const response = github.request<any>("/error-endpoint");
+      expect(response).rejects.toThrow(
+        "GitHub API request failed: 500 Internal Server Error",
       );
     });
   });
@@ -97,6 +113,66 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
       );
 
       expect(diff).toEqual(mockDiffResponse);
+    });
+  });
+
+  describe("Get file content", () => {
+    const mockFileContentResponse = {
+      type: "file",
+      encoding: "base64",
+      content: Buffer.from("TEST_VAR=test_value").toString("base64"),
+    };
+
+    beforeAll(() => {
+      global.fetch = vi.fn().mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockFileContentResponse),
+        });
+      });
+    });
+
+    afterAll(() => {
+      vi.restoreAllMocks();
+    });
+
+    test("should fetch file content at specific reference", async () => {
+      const github = new GithubAPI(mockToken);
+      const fileContent = await github.getFileContent(
+        "owner/repo",
+        ".env.example",
+        "ref",
+      );
+
+      expect(fileContent).toEqual(mockFileContentResponse);
+    });
+
+    test("should fetch latset file content when ref is not provided", async () => {
+      const github = new GithubAPI(mockToken);
+      const fileContent = await github.getFileContent(
+        "owner/repo",
+        ".env.example",
+      );
+
+      expect(fileContent).toEqual(mockFileContentResponse);
+    });
+
+    test("should return null for 404 response", async () => {
+      vi.restoreAllMocks();
+      global.fetch = vi.fn().mockImplementation(() => {
+        return Promise.resolve({
+          status: 404,
+          ok: false,
+        });
+      });
+
+      const github = new GithubAPI(mockToken);
+      const fileContent = await github.getFileContent(
+        "owner/repo",
+        "nonexistent.file",
+      );
+
+      expect(fileContent).toBeNull();
     });
   });
 });

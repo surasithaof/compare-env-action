@@ -1,8 +1,19 @@
-import { DIFF_HEADERS, DIFF_PREFIXES } from "./constant";
+import { HEADERS, PREFIXES } from "./constant";
 import type { EnvChange } from "./types";
 
 function parseLine(line: string) {
-  const envLine = line.substring(1); // Remove the + prefix
+  if (line.trim().startsWith(PREFIXES.comment)) {
+    return null; // Skip comment lines
+  }
+
+  let envLine = line;
+  if (
+    line.startsWith(PREFIXES.added) ||
+    line.startsWith(PREFIXES.removed) ||
+    line.startsWith(PREFIXES.context)
+  ) {
+    envLine = envLine.substring(1); // Remove the diff prefix
+  }
   if (envLine.trim() && envLine.includes("=")) {
     const [key, ...value] = envLine.split("=");
     return { key: key!.trim(), value: value.join("=").trim() };
@@ -11,7 +22,7 @@ function parseLine(line: string) {
 }
 
 function isDiffHeader(line: string) {
-  return DIFF_HEADERS.some((header: string) => line.startsWith(header));
+  return HEADERS.some((header: string) => line.startsWith(header));
 }
 
 function parseDiffEntries(
@@ -75,10 +86,6 @@ function parseDiffEntries(
  * @returns An object containing added, removed, and modified environment variables.
  */
 export function parseChanges(diffContent: string): EnvChange {
-  if (!diffContent) {
-    throw new Error("Invalid diff content provided");
-  }
-
   // Split diff content into lines
   const lines = diffContent.replaceAll("\\n", "\n").split("\n");
 
@@ -91,20 +98,19 @@ export function parseChanges(diffContent: string): EnvChange {
       continue;
     }
 
+    const kv = parseLine(line);
+    if (!kv) {
+      continue;
+    }
+
     // Parse added lines (start with +)
-    if (line.startsWith(DIFF_PREFIXES.added)) {
-      const kv = parseLine(line);
-      if (kv) {
-        added.set(kv.key, kv.value);
-      }
+    if (line.startsWith(PREFIXES.added)) {
+      added.set(kv.key, kv.value);
     }
 
     // Parse removed lines (start with -)
-    if (line.startsWith(DIFF_PREFIXES.removed)) {
-      const kv = parseLine(line);
-      if (kv) {
-        removed.set(kv.key, kv.value);
-      }
+    if (line.startsWith(PREFIXES.removed)) {
+      removed.set(kv.key, kv.value);
     }
   }
 
@@ -124,15 +130,15 @@ export function hasChanges(changes: EnvChange): boolean {
   );
 }
 
+/**
+ * Parses the diff content assuming all lines are new additions.
+ * @param diffContent - The diff content string to parse.
+ * @returns An object containing added environment variables.
+ */
 export function parseAllNewEnv(diffContent: string): EnvChange {
-  if (!diffContent) {
-    throw new Error("Invalid diff content provided");
-  }
-
   const lines = diffContent.replaceAll("\\n", "\n").split("\n");
 
   const added = new Map<string, string>();
-
   for (const line of lines) {
     // Skip diff headers and context lines
     if (isDiffHeader(line)) {

@@ -1,16 +1,17 @@
 export const DEFAULT = {
-  baseRef: "release",
+  baseRef: "latest",
   headRef: "master",
   fileToCompare: ".env.example",
 };
 
-export const DIFF_PREFIXES = {
+export const PREFIXES = {
   added: "+",
   removed: "-",
   context: " ",
+  comment: "#",
 };
 
-export const DIFF_HEADERS = ["@@", "diff", "index", "---", "+++"];
+export const HEADERS = ["@@", "diff", "index", "---", "+++"];
 
 export const ERRORS = {
   tokenMissing:

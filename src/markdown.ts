@@ -15,7 +15,7 @@ export function generateMarkdown(changes: EnvChange, header: string = "") {
   if (changes.added.size > 0) {
     markdown += "**New Environment Variables**\n\n";
     for (const [key, _] of changes.added) {
-      markdown += `- \`${key}\`\n`;
+      markdown += formatNewVar(key);
     }
     markdown += "\n";
   }
@@ -23,7 +23,7 @@ export function generateMarkdown(changes: EnvChange, header: string = "") {
   if (changes.removed.size > 0) {
     markdown += "**Removed Environment Variables**\n\n";
     for (const [key, _] of changes.removed) {
-      markdown += `- ~~\`${key}\`~~\n`;
+      markdown += formatRemovedVar(key);
     }
     markdown += "\n";
   }
@@ -31,14 +31,32 @@ export function generateMarkdown(changes: EnvChange, header: string = "") {
   if (changes.modified.size > 0) {
     markdown += "**Modified Environment Variables**\n\n";
     for (const [key, val] of changes.modified) {
-      markdown += `- **\`${key}\`**:\n`;
-      markdown += "  ```diff\n";
-      markdown += `  - ${val.oldValue}\n`;
-      markdown += `  + ${val.newValue}\n`;
-      markdown += "  ```\n";
+      markdown += formatModifiedVar(key, val.oldValue, val.newValue);
     }
     markdown += "\n";
   }
 
   return markdown;
+}
+
+function formatNewVar(key: string) {
+  return `- \`${key}\`\n`;
+}
+
+function formatRemovedVar(key: string) {
+  return `- ~~\`${key}\`~~\n`;
+}
+
+function formatModifiedVar(
+  key: string,
+  oldValue: string,
+  newValue: string,
+): string {
+  return (
+    `- **\`${key}\`**:\n` +
+    "  ```diff\n" +
+    `  - ${oldValue}\n` +
+    `  + ${newValue}\n` +
+    "  ```\n"
+  );
 }

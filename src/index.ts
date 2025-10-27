@@ -1,11 +1,11 @@
 import core from "@actions/core";
+import { setupAction } from "./action";
+import { parseArgs } from "./cli";
 import { DEFAULT } from "./constant";
 import { hasChanges, parseAllNewEnv, parseChanges } from "./diff";
 import { GithubAPI } from "./github";
 import { generateMarkdown } from "./markdown";
 import type { EnvChange } from "./types";
-import { setupAction } from "./action";
-import { parseArgs } from "./cli";
 
 /**
  * Compares a specific file between two references in a GitHub repository
@@ -32,8 +32,18 @@ async function compare(
     const latestRelease = await ghClient.getLatestRelease(repo);
     if (!latestRelease) {
       // consider all changes if no release found
-      //
-      const diff = "";
+      const data = await ghClient.getFileContent(repo, fileToCompare, headRef);
+      if (!data) {
+        throw new Error(
+          `Unable to fetch file content: ${fileToCompare} at reference: ${headRef}. Please ensure the file exists in the repository.`,
+        );
+      }
+      const diff = Buffer.from(
+        data.content,
+        data.encoding as BufferEncoding,
+      ).toString();
+
+      console.log("new file diff", diff);
       return parseAllNewEnv(diff);
     }
     baseRef = latestRelease.tag_name;
