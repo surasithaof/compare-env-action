@@ -1,8 +1,11 @@
-import { parseArgs } from "./cli";
+import core from "@actions/core";
 import { DEFAULT } from "./constant";
-import { parseChanges } from "./diff";
+import { hasChanges, parseAllNewEnv, parseChanges } from "./diff";
 import { GithubAPI } from "./github";
 import { generateMarkdown } from "./markdown";
+import type { EnvChange } from "./types";
+import { setupAction } from "./action";
+import { parseArgs } from "./cli";
 
 /**
  * Compares a specific file between two references in a GitHub repository
@@ -21,42 +24,51 @@ async function compare(
   baseRef: string,
   headRef: string,
   fileToCompare: string,
-) {
+): Promise<EnvChange> {
   const ghClient = new GithubAPI(ghToken);
 
   // if baseRef is "latest", fetch the latest release tag
   if (baseRef === DEFAULT.baseRef) {
     const latestRelease = await ghClient.getLatestRelease(repo);
-    console.debug(`Latest release tag: ${JSON.stringify(latestRelease)}`);
+    if (!latestRelease) {
+      // consider all changes if no release found
+      //
+      const diff = "";
+      return parseAllNewEnv(diff);
+    }
     baseRef = latestRelease.tag_name;
   }
+  // if not found latest release, consider all changes from the beginning
 
   // Get diff from GitHub API
   const diffData = await ghClient.compareReferences(repo, baseRef, headRef);
+  if (!diffData) {
+    throw new Error(
+      `Unable to compare references: ${baseRef}...${headRef}. Please ensure the references exist in the repository.`,
+    );
+  }
 
   // Find the specific file diff
   const diff = diffData.files.find((file) => file.filename === fileToCompare);
   if (!diff?.patch) {
     console.log(`No changes found in ${fileToCompare} file.`);
-    return;
+    return { added: new Map(), removed: new Map(), modified: new Map() };
   }
 
   // Parse changes
-  const changes = parseChanges(diff.patch);
-
-  // Generate markdown
-  return generateMarkdown(changes);
+  return parseChanges(diff.patch);
 }
 
 async function main() {
   try {
-    // Parse command-line arguments
-    let { ghToken, repo, baseRef, headRef, fileToCompare } = parseArgs();
+    const { ghToken, repo, baseRef, headRef, fileToCompare } = parseArgs();
+    // const { ghToken, repo, baseRef, headRef, fileToCompare } = setupAction();
 
+    console.log(`Repository: ${repo}`);
     console.log(`Compare file: ${fileToCompare}`);
     console.log(`Comparing ${baseRef}...${headRef}`);
 
-    const markdown = await compare(
+    const changes = await compare(
       ghToken,
       repo,
       baseRef,
@@ -64,15 +76,21 @@ async function main() {
       fileToCompare,
     );
 
-    if (!markdown) {
+    if (!hasChanges(changes)) {
+      core.setOutput("has-changes", "false");
       console.log("No changes detected.");
       return;
     }
 
-    // Output to stdout
-    console.log(markdown);
+    const changelog = generateMarkdown(changes);
+    core.setOutput("has-changes", "true");
+    core.setOutput("changelog", changelog);
+
+    console.log("Changelog:");
+    console.log(changelog);
   } catch (error: any) {
-    console.error(`Error processing changes: ${error}`);
+    console.error(`Error processing changes: ${error.message}`);
+    core.setFailed(error.message);
     process.exit(1);
   }
 }

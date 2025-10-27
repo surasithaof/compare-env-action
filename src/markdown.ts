@@ -1,4 +1,3 @@
-import { hasChanges } from "./diff";
 import type { EnvChange } from "./types";
 
 /**
@@ -7,23 +6,10 @@ import type { EnvChange } from "./types";
  * @param header - An optional header string to include at the top of the markdown.
  * @returns A string containing the markdown representation of the changes.
  */
-export function generateMarkdown(
-  changes: EnvChange,
-  header: string = "",
-  emptyIfNoChanges: boolean = false,
-) {
+export function generateMarkdown(changes: EnvChange, header: string = "") {
   let markdown = "";
   if (header) {
     markdown += `${header}\n\n`;
-  }
-
-  if (!hasChanges(changes) && emptyIfNoChanges) {
-    return "";
-  }
-
-  if (!hasChanges(changes)) {
-    markdown += "No changes detected.\n\n";
-    return markdown;
   }
 
   if (changes.added.size > 0) {

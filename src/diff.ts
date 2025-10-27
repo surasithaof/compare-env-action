@@ -123,3 +123,28 @@ export function hasChanges(changes: EnvChange): boolean {
     changes.modified.size > 0
   );
 }
+
+export function parseAllNewEnv(diffContent: string): EnvChange {
+  if (!diffContent) {
+    throw new Error("Invalid diff content provided");
+  }
+
+  const lines = diffContent.replaceAll("\\n", "\n").split("\n");
+
+  const added = new Map<string, string>();
+
+  for (const line of lines) {
+    // Skip diff headers and context lines
+    if (isDiffHeader(line)) {
+      continue;
+    }
+
+    // Parse added lines (start with +)
+    const kv = parseLine(line);
+    if (kv) {
+      added.set(kv.key, kv.value);
+    }
+  }
+
+  return { added, removed: new Map(), modified: new Map() };
+}

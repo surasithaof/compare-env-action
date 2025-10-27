@@ -20,14 +20,16 @@ class GithubAPI {
    * @param endpoint - endpoint to request to Github API with method GET
    * @returns response data from Github API
    */
-  async request<T>(endpoint: string): Promise<T> {
+  async request<T>(endpoint: string): Promise<T | null> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
         Authorization: `Bearer ${this.token}`,
         Accept: "application/vnd.github.v3+json",
       },
     });
-
+    if (response.status == 404) {
+      return null;
+    }
     if (!response.ok) {
       throw new Error(
         `GitHub API request failed: ${response.status} ${response.statusText}`,
@@ -42,7 +44,7 @@ class GithubAPI {
    * @param repo - repository name informat `owner/repo`
    * @returns latest release information from the repository
    */
-  async getLatestRelease(repo: string): Promise<LatestRelease> {
+  async getLatestRelease(repo: string): Promise<LatestRelease | null> {
     return this.request<LatestRelease>(`/repos/${repo}/releases/latest`);
   }
 
@@ -57,7 +59,7 @@ class GithubAPI {
     repo: string,
     base: string,
     head: string,
-  ): Promise<GithubDiff> {
+  ): Promise<GithubDiff | null> {
     return this.request<GithubDiff>(`/repos/${repo}/compare/${base}...${head}`);
   }
 }

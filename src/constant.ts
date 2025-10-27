@@ -1,5 +1,5 @@
 export const DEFAULT = {
-  baseRef: "latest",
+  baseRef: "release",
   headRef: "master",
   fileToCompare: ".env.example",
 };

@@ -1,0 +1,31 @@
+name: "Compare Environment Changes"
+description: "Compares environment configuration changes for release management to ensure consistency across different deployment environments."
+inputs:
+  github-token:
+    description: "GitHub token with permissions to access the repository"
+    required: true
+    default: "${{ github.token }}"
+  repository:
+    description: "The repository to compare environments in the format 'owner/repo'"
+    required: true
+    default: "${{ github.repository }}"
+  head-ref:
+    description: "The head ref to compare against (e.g., 'main' or 'master')"
+    required: true
+    default: "master"
+  base-ref:
+    description: "The base ref to compare (e.g., the feature or release branch)"
+    required: true
+    default: "latest"
+  env-file-path:
+    description: "Path to the environment configuration file to compare"
+    required: true
+    default: ".env.example"
+outputs:
+  has-changes:
+    description: "Indicates whether there are differences between the environment files"
+  changelog:
+    description: "A summary of the differences found between the environment files"
+runs:
+  using: "node16"
+  main: "dist/index.js"
