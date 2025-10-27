@@ -1,0 +1,128 @@
+import { HEADERS, PREFIXES } from "./constant";
+function parseLine(line) {
+    if (line.trim().startsWith(PREFIXES.comment)) {
+        return null; // Skip comment lines
+    }
+    let envLine = line;
+    if (line.startsWith(PREFIXES.added) ||
+        line.startsWith(PREFIXES.removed) ||
+        line.startsWith(PREFIXES.context)) {
+        envLine = envLine.substring(1); // Remove the diff prefix
+    }
+    if (envLine.trim() && envLine.includes("=")) {
+        const [key, ...value] = envLine.split("=");
+        return { key: key.trim(), value: value.join("=").trim() };
+    }
+    return null;
+}
+function isDiffHeader(line) {
+    return HEADERS.some((header) => line.startsWith(header));
+}
+function parseDiffEntries(added, removed) {
+    // find the same value that in added and removed,
+    // it's likely modified variables.
+    const commonKeys = new Map();
+    added.forEach((_, added) => {
+        removed.forEach((_, removed) => {
+            if (added === removed) {
+                commonKeys.set(added, true);
+            }
+        });
+    });
+    // sometimes the same key can be added and removed with the same value
+    // e.g. new line added and then removed, or changed line that has the same value
+    // so we need to filter those out.
+    const commonKVs = new Map();
+    added.forEach((addedVal, addedKey) => {
+        removed.forEach((removedVal, removedKey) => {
+            if (addedKey === removedKey && addedVal === removedVal) {
+                commonKVs.set(addedKey, true);
+            }
+        });
+    });
+    const modified = new Map();
+    commonKeys.forEach((_, key) => {
+        if (commonKVs.has(key)) {
+            // skip same key-value pairs as they are not modified
+            return;
+        }
+        const newValue = added.get(key);
+        const oldValue = removed.get(key);
+        modified.set(key, { oldValue, newValue });
+    });
+    // Remove duplicates from added
+    added.forEach((_, key) => {
+        if (commonKeys.has(key) || commonKVs.has(key)) {
+            added.delete(key);
+        }
+    });
+    // Remove duplicates from removed
+    removed.forEach((_, key) => {
+        if (commonKeys.has(key) || commonKVs.has(key)) {
+            removed.delete(key);
+        }
+    });
+    return { added, removed, modified };
+}
+/**
+ * Parses the diff content to extract environment variable changes.
+ * @param diffContent - parse the diff content string to extract environment variable changes
+ * @returns An object containing added, removed, and modified environment variables.
+ */
+export function parseChanges(diffContent) {
+    // Split diff content into lines
+    const lines = diffContent.replaceAll("\\n", "\n").split("\n");
+    const added = new Map();
+    const removed = new Map();
+    for (const line of lines) {
+        // Skip diff headers and context lines
+        if (isDiffHeader(line)) {
+            continue;
+        }
+        const kv = parseLine(line);
+        if (!kv) {
+            continue;
+        }
+        // Parse added lines (start with +)
+        if (line.startsWith(PREFIXES.added)) {
+            added.set(kv.key, kv.value);
+        }
+        // Parse removed lines (start with -)
+        if (line.startsWith(PREFIXES.removed)) {
+            removed.set(kv.key, kv.value);
+        }
+    }
+    return parseDiffEntries(added, removed);
+}
+/**
+ * Checks if there are any changes in the EnvChange object.
+ * @param changes - An object containing added, removed, and modified environment variables.
+ * @returns A boolean indicating if there are any changes.
+ */
+export function hasChanges(changes) {
+    return (changes.added.size > 0 ||
+        changes.removed.size > 0 ||
+        changes.modified.size > 0);
+}
+/**
+ * Parses the diff content assuming all lines are new additions.
+ * @param diffContent - The diff content string to parse.
+ * @returns An object containing added environment variables.
+ */
+export function parseAllNewEnv(diffContent) {
+    const lines = diffContent.replaceAll("\\n", "\n").split("\n");
+    const added = new Map();
+    for (const line of lines) {
+        // Skip diff headers and context lines
+        if (isDiffHeader(line)) {
+            continue;
+        }
+        // Parse added lines (start with +)
+        const kv = parseLine(line);
+        if (kv) {
+            added.set(kv.key, kv.value);
+        }
+    }
+    return { added, removed: new Map(), modified: new Map() };
+}
+//# sourceMappingURL=diff.js.map
