@@ -1,5 +1,5 @@
 {
-  "name": "compare-env-action",
+  "name": "compare-env",
   "version": "1.0.0",
   "description": "A TypeScript tool to compare environment variable changes between Git references",
   "main": "dist/index.js",

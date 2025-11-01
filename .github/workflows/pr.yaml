@@ -1,0 +1,40 @@
+name: PR checks
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "src/**"
+      - ".github/workflows/pr.yaml"
+      - "test/**"
+      - "package.json"
+
+jobs:
+  compare-env:
+    name: Compare Environment Changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: spa/pnpm-lock.yam
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: "Test"
+        run: npx vitest --coverage.enabled true
+
+      - name: "Report Coverage"
+        uses: davelosert/vitest-coverage-report-action@v2
