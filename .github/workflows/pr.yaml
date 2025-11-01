@@ -13,8 +13,8 @@ on:
       - "package.json"
 
 jobs:
-  compare-env:
-    name: Compare Environment Changes
+  pr-checks:
+    name: PR Checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
