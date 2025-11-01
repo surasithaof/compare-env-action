@@ -8,6 +8,12 @@ export default defineConfig({
       enabled: true,
       provider: "v8", // or 'istanbul'
       reporter: ["text", "json-summary", "json"],
+      thresholds: {
+        lines: 80,
+        branches: 80,
+        functions: 80,
+        statements: 80,
+      },
     },
     reporters: ["default"],
   },
