@@ -1,3 +1,5 @@
+name: Compare Environment Variables
+
 on:
   workflow_dispatch:
 
