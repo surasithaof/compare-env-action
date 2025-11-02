@@ -3,10 +3,11 @@ on:
 
 jobs:
   compare-env:
+    name: Compare Environment Variables
     runs-on: ubuntu-latest
     steps:
       - name: Compare Environment Variables
-        uses: surasith/compare-env@v0.1.0
+        uses: surasithaof/compare-env@v0.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
