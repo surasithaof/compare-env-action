@@ -1,0 +1,15 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  compare-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare Environment Variables
+        uses: surasith/compare-env@v0.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          base-ref: "latest"
+          head-ref: ${{ github.head_ref }}
+          env-file-path: ".env.example"
