@@ -1,15 +1,15 @@
-name: Compare Environment Variables
+name: Compare env changes
 
 on:
   workflow_dispatch:
 
 jobs:
   compare-env:
-    name: Compare Environment Variables
+    name: Compare env changes
     runs-on: ubuntu-latest
     steps:
       - name: Compare Environment Variables
-        uses: surasithaof/compare-env@master
+        uses: surasithaof/compare-env@v0.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
