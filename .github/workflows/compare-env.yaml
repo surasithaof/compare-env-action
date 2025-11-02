@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Compare Environment Variables
-        uses: surasithaof/compare-env@v0.1.0
+        uses: surasithaof/compare-env@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
