@@ -52,16 +52,16 @@ git clone https://github.com/surasithaof/compare-env.git
 cd compare-env-action
 
 # Install dependencies
-npm install
+pnpm install
 
 # Build the project
-npm run build
+pnpm run build
 
 # Set GitHub token
 export GITHUB_TOKEN=your_github_token_here
 
 # Run the comparison
-npm run compare owner/repo latest main .env.example
+pnpm run compare owner/repo latest main .env.example
 ```
 
 ## Usage
@@ -110,23 +110,23 @@ npm run compare owner/repo latest main .env.example
 #### Basic Syntax
 
 ```bash
-npm run compare <repository> [base-ref] [head-ref] [file-path]
+pnpm run compare <repository> [base-ref] [head-ref] [file-path]
 ```
 
 #### Examples
 
 ```bash
 # Compare against latest release
-GITHUB_TOKEN=xxx && npm run compare owner/repo
+GITHUB_TOKEN=xxx && pnpm run compare owner/repo
 
 # Compare specific branches
-GITHUB_TOKEN=xxx && npm run compare owner/repo main feature/new-env
+GITHUB_TOKEN=xxx && pnpm run compare owner/repo main feature/new-env
 
 # Compare with custom file
-GITHUB_TOKEN=xxx && npm run compare owner/repo v1.0.0 main .env.production
+GITHUB_TOKEN=xxx && pnpm run compare owner/repo v1.0.0 main .env.production
 
 # Compare tags
-GITHUB_TOKEN=xxx && npm run compare owner/repo v1.0.0 v2.0.0 .env.example
+GITHUB_TOKEN=xxx && pnpm run compare owner/repo v1.0.0 v2.0.0 .env.example
 ```
 
 ## Inputs & Outputs
