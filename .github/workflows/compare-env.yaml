@@ -2,6 +2,19 @@ name: Compare env changes
 
 on:
   workflow_dispatch:
+    inputs:
+      base-ref:
+        description: "The base ref to compare (e.g., the feature or release branch)"
+        required: false
+        default: "latest"
+      head-ref:
+        description: "The head ref to compare against (e.g., main or master)"
+        required: false
+        default: "master"
+      env-file-path:
+        description: "Path to the environment configuration file to compare"
+        required: false
+        default: ".env.example"
 
 jobs:
   compare-env:
@@ -14,9 +27,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          base-ref: "latest"
-          head-ref: ${{ github.ref }}
-          env-file-path: ".env.example"
+          base-ref: ${{ github.event.inputs.base-ref }}
+          head-ref: ${{ github.event.inputs.head-ref }}
+          env-file-path: ${{ github.event.inputs.env-file-path }}
 
       - name: Output Results
         run: |
