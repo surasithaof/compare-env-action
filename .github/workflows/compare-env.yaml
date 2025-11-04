@@ -20,5 +20,8 @@ jobs:
 
       - name: Output Results
         run: |
-          echo "Has changes: ${{ steps.compare-env.outputs.has-changes }}"
-          echo "Changelog: ${{ steps.compare-env.outputs.changelog }}"
+          # need to use single quotes because changelog may contain backticks which break the double-quoted string
+          echo 'Has changes: ${{ steps.compare-env.outputs.has-changes }}'
+          echo 'Changelog: ${{ steps.compare-env.outputs.changelog }}'
+
+          export GITHUB_OUTPUT='has-changes=${{ steps.compare-env.outputs.has-changes }}\nchangelog=${{ steps.compare-env.outputs.changelog }}'
