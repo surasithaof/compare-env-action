@@ -39,4 +39,3 @@ declare class GithubAPI {
     getFileContent(repo: string, path: string, ref?: string | null): Promise<GithubFileContent | null>;
 }
 export { GithubAPI };
-//# sourceMappingURL=github.d.ts.map

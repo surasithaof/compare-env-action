@@ -6,4 +6,3 @@ import type { EnvChange } from "./types";
  * @returns A string containing the markdown representation of the changes.
  */
 export declare function generateMarkdown(changes: EnvChange, header?: string): string;
-//# sourceMappingURL=markdown.d.ts.map

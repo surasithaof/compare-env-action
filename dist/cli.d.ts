@@ -5,4 +5,3 @@ export declare function parseArgs(): {
     headRef: string;
     fileToCompare: string;
 };
-//# sourceMappingURL=cli.d.ts.map

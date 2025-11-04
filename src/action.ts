@@ -1,15 +1,14 @@
-import core from "@actions/core";
-import github from "@actions/github";
+import { getInput } from "@actions/core";
+import { context } from "@actions/github";
 import { ERRORS } from "./constant";
 
 export function setupAction() {
-  const ghToken = core.getInput("github-token");
+  const ghToken = getInput("github-token");
   const repo =
-    core.getInput("repository") ||
-    github.context.repo.owner + "/" + github.context.repo.repo;
-  const baseRef = core.getInput("base-ref");
-  const headRef = core.getInput("head-ref");
-  const fileToCompare = core.getInput("env-file-path");
+    getInput("repository") || context.repo.owner + "/" + context.repo.repo;
+  const baseRef = getInput("base-ref");
+  const headRef = getInput("head-ref");
+  const fileToCompare = getInput("env-file-path");
 
   if (!repo || !baseRef || !headRef || !fileToCompare) {
     throw new Error(ERRORS.invalidArgs);

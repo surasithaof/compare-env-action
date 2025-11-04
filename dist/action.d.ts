@@ -5,4 +5,3 @@ export declare function setupAction(): {
     headRef: string;
     fileToCompare: string;
 };
-//# sourceMappingURL=action.d.ts.map

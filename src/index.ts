@@ -1,4 +1,4 @@
-import core from "@actions/core";
+import { setOutput, setFailed } from "@actions/core";
 import { setupAction } from "./action";
 import { parseArgs } from "./cli";
 import { DEFAULT } from "./constant";
@@ -89,20 +89,20 @@ async function main() {
     );
 
     if (!hasChanges(changes)) {
-      process.env.GITHUB_ACTIONS && core.setOutput("has-changes", "false");
+      process.env.GITHUB_ACTIONS && setOutput("has-changes", "false");
       console.log("No changes detected.");
       return;
     }
 
     const changelog = generateMarkdown(changes);
-    process.env.GITHUB_ACTIONS && core.setOutput("has-changes", "true");
-    process.env.GITHUB_ACTIONS && core.setOutput("changelog", changelog);
+    process.env.GITHUB_ACTIONS && setOutput("has-changes", "true");
+    process.env.GITHUB_ACTIONS && setOutput("changelog", changelog);
 
     console.log("Changelog:");
     console.log(changelog);
   } catch (error: any) {
     console.error(`Error processing changes: ${error.message}`);
-    process.env.GITHUB_ACTIONS && core.setFailed(error.message);
+    process.env.GITHUB_ACTIONS && setFailed(error.message);
     process.exit(1);
   }
 }

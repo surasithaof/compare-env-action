@@ -6,8 +6,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc --outDir dist",
-    "compile": "rollup -c",
+    "build": "ncc build src/index.ts --minify -o dist",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "compare": "tsx src/index.ts",
@@ -17,7 +16,10 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist coverage"
+    "clean": "rm -rf dist coverage",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "lint": "eslint src/**/*.ts"
   },
   "keywords": [
     "environment",

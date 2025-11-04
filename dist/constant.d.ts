@@ -14,4 +14,3 @@ export declare const ERRORS: {
     tokenMissing: string;
     invalidArgs: string;
 };
-//# sourceMappingURL=constant.d.ts.map

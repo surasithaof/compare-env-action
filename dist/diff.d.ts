@@ -17,4 +17,3 @@ export declare function hasChanges(changes: EnvChange): boolean;
  * @returns An object containing added environment variables.
  */
 export declare function parseAllNewEnv(diffContent: string): EnvChange;
-//# sourceMappingURL=diff.d.ts.map
