@@ -163,13 +163,6 @@ GITHUB_TOKEN=xxx && npm run compare owner/repo v1.0.0 v2.0.0 .env.example
 | -------------- | ---------------------------- | -------- | ------------------ |
 | `GITHUB_TOKEN` | GitHub personal access token | Yes      | `ghp_xxxxxxxxxxxx` |
 
-### CLI Exit Codes
-
-| Code | Description                                     |
-| ---- | ----------------------------------------------- |
-| `0`  | Success - comparison completed                  |
-| `1`  | Error - configuration, API, or comparison error |
-
 ## Configuration Options
 
 ### Special Base References
