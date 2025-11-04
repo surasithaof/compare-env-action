@@ -22,4 +22,3 @@ export function parseArgs() {
 
   return { ghToken, repo, baseRef, headRef, fileToCompare };
 }
-
