@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Compare Environment Variables
+        id: compare-env
         uses: surasithaof/compare-env@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -16,3 +17,8 @@ jobs:
           base-ref: "latest"
           head-ref: ${{ github.ref }}
           env-file-path: ".env.example"
+
+      - name: Output Results
+        run: |
+          echo "Has changes: ${{ steps.compare-env.outputs.has-changes }}"
+          echo "Changelog: ${{ steps.compare-env.outputs.changelog }}"
