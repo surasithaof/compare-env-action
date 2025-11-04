@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Compare Environment Variables
-        uses: your-org/compare-env-action@v1
+        uses: surasithaof/compare-env@v0.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
@@ -48,7 +48,7 @@ jobs:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/compare-env-action.git
+git clone https://github.com/surasithaof/compare-env.git
 cd compare-env-action
 
 # Install dependencies
@@ -72,7 +72,7 @@ npm run compare owner/repo latest main .env.example
 
 ```yaml
 - name: Compare Environment Variables
-  uses: your-org/compare-env-action@v1
+  uses: surasithaof/compare-env@v0.1.0
   with:
     base-ref: "v1.0.0"
     head-ref: "main"
@@ -83,7 +83,7 @@ npm run compare owner/repo latest main .env.example
 
 ```yaml
 - name: Compare Environment Variables
-  uses: your-org/compare-env-action@v1
+  uses: surasithaof/compare-env@v0.1.0
   id: env-compare
   with:
     github-token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
