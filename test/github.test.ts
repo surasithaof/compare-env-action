@@ -20,6 +20,7 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
 
     test("should include Authorization and Accept headers", async () => {
       const github = new GithubAPI(mockToken);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await github.request<any>("/test-endpoint");
 
       expect(response.headers).toBeDefined();
@@ -38,6 +39,7 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
       });
 
       const github = new GithubAPI(mockToken);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = github.request<any>("/invalid-endpoint");
       expect(response).resolves.toBeNull();
     });
@@ -53,6 +55,7 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
       });
 
       const github = new GithubAPI(mockToken);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = github.request<any>("/error-endpoint");
       expect(response).rejects.toThrow(
         "GitHub API request failed: 500 Internal Server Error",
@@ -61,7 +64,10 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
   });
 
   describe("Get latest release", () => {
-    const mockReleaseResponse = { tag_name: "v1.0.0", name: "Initial Release" };
+    const mockReleaseResponse = {
+      tag_name: "v1.0.0",
+      name: "Initial Release",
+    };
 
     beforeAll(() => {
       global.fetch = vi.fn().mockImplementation(() => {
@@ -87,7 +93,10 @@ describe("github.test.ts - GitHub Utils Test Suite", () => {
   describe("Compare references", () => {
     const mockDiffResponse = {
       files: [
-        { filename: "env.example", patch: "@@ -1 +1 @@\n+ NEW_VAR=new_value" },
+        {
+          filename: "env.example",
+          patch: "@@ -1 +1 @@\n+ NEW_VAR=new_value",
+        },
       ],
     };
 
