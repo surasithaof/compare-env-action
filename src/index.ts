@@ -3,9 +3,10 @@ import { setupAction } from "./action";
 import { parseArgs } from "./cli";
 import { DEFAULT } from "./constant";
 import { hasChanges, parseAllNewEnv, parseChanges } from "./diff";
-import { GithubAPI } from "./github";
+// import { GithubAPI } from "./github";
 import { generateMarkdown } from "./markdown";
 import type { EnvChange } from "./types";
+import { Octokit } from "@octokit/rest";
 
 /**
  * Compares a specific file between two references in a GitHub repository
@@ -25,41 +26,62 @@ async function compare(
   headRef: string,
   fileToCompare: string,
 ): Promise<EnvChange> {
-  const ghClient = new GithubAPI(ghToken);
+  const ghClient = new Octokit({ auth: ghToken });
+  const [owner, repoName] = repo.split("/");
 
   // if baseRef is "latest", fetch the latest release tag
   if (baseRef === DEFAULT.baseRef) {
-    const latestRelease = await ghClient.getLatestRelease(repo);
+    const latestRelease = await ghClient.rest.repos.getLatestRelease({
+      owner: owner,
+      repo: repoName,
+    });
     if (!latestRelease) {
       // consider all changes if no release found
-      const data = await ghClient.getFileContent(repo, fileToCompare, headRef);
-      if (!data) {
+      const content = await ghClient.rest.repos.getContent({
+        owner: owner,
+        repo: repoName,
+        path: fileToCompare,
+        ref: headRef,
+      });
+      if (!content?.data) {
         throw new Error(
           `Unable to fetch file content: ${fileToCompare} at reference: ${headRef}. Please ensure the file exists in the repository.`,
         );
       }
+      if (!("content" in content.data)) {
+        throw new Error(
+          `The path: ${fileToCompare} is not a file in the repository.`,
+        );
+      }
       const diff = Buffer.from(
-        data.content,
-        data.encoding as BufferEncoding,
+        content.data.content,
+        content.data.encoding as BufferEncoding,
       ).toString();
 
       console.log("new file diff", diff);
       return parseAllNewEnv(diff);
     }
-    baseRef = latestRelease.tag_name;
+    baseRef = latestRelease.data.tag_name;
   }
   // if not found latest release, consider all changes from the beginning
 
   // Get diff from GitHub API
-  const diffData = await ghClient.compareReferences(repo, baseRef, headRef);
-  if (!diffData) {
+  const diffData = await ghClient.rest.repos.compareCommits({
+    owner: owner,
+    repo: repoName,
+    base: baseRef,
+    head: headRef,
+  });
+  if (!diffData?.data?.files) {
     throw new Error(
       `Unable to compare references: ${baseRef}...${headRef}. Please ensure the references exist in the repository.`,
     );
   }
 
   // Find the specific file diff
-  const diff = diffData.files.find((file) => file.filename === fileToCompare);
+  const diff = diffData.data.files.find(
+    (file) => file.filename === fileToCompare,
+  );
   if (!diff?.patch) {
     console.log(`No changes found in ${fileToCompare} file.`);
     return { added: new Map(), removed: new Map(), modified: new Map() };
