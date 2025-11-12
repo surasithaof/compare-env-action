@@ -31,10 +31,19 @@ async function compare(
 
   // if baseRef is "latest", fetch the latest release tag
   if (baseRef === DEFAULT.baseRef) {
-    const latestRelease = await ghClient.rest.repos.getLatestRelease({
-      owner: owner,
-      repo: repoName,
-    });
+    const latestRelease = await ghClient.rest.repos
+      .getLatestRelease({
+        owner: owner,
+        repo: repoName,
+      })
+      .catch((error) => {
+        if (error.status === 404) {
+          return null;
+        }
+        throw error;
+      });
+
+    // if not found latest release, consider all changes from the beginning
     if (!latestRelease) {
       // consider all changes if no release found
       const content = await ghClient.rest.repos.getContent({
@@ -63,7 +72,6 @@ async function compare(
     }
     baseRef = latestRelease.data.tag_name;
   }
-  // if not found latest release, consider all changes from the beginning
 
   // Get diff from GitHub API
   const diffData = await ghClient.rest.repos.compareCommits({
