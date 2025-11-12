@@ -45,23 +45,32 @@ async function compare(
 
     // if not found latest release, consider all changes from the beginning
     if (!latestRelease) {
-      // consider all changes if no release found
-      const content = await ghClient.rest.repos.getContent({
-        owner: owner,
-        repo: repoName,
-        path: fileToCompare,
-        ref: headRef,
-      });
+      const content = await ghClient.rest.repos
+        .getContent({
+          owner: owner,
+          repo: repoName,
+          path: fileToCompare,
+          ref: headRef,
+        })
+        .catch((error) => {
+          if (error.status === 404) {
+            return null;
+          }
+          throw error;
+        });
+
       if (!content?.data) {
         throw new Error(
           `Unable to fetch file content: ${fileToCompare} at reference: ${headRef}. Please ensure the file exists in the repository.`,
         );
       }
+
       if (!("content" in content.data)) {
         throw new Error(
           `The path: ${fileToCompare} is not a file in the repository.`,
         );
       }
+
       const diff = Buffer.from(
         content.data.content,
         content.data.encoding as BufferEncoding,
