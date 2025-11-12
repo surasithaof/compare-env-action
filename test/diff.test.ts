@@ -87,11 +87,21 @@ THIRD_VAR=third_value
   });
 
   test("should return true for hasChanges when there are added, removed, or modified variables", () => {
-    const added = new Map<string, string>([["NEW_VAR", "new_value"]]);
+    const added = new Map<string, string>();
     const removed = new Map<string, string>();
     const modified = new Map<string, { oldValue: string; newValue: string }>();
     const changes: EnvChange = { added, removed, modified };
+    expect(hasChanges(changes)).toBe(false);
 
+    added.set("NEW_VAR", "new_value");
+    expect(hasChanges(changes)).toBe(true);
+
+    added.clear();
+    removed.set("OLD_VAR", "old_value");
+    expect(hasChanges(changes)).toBe(true);
+
+    removed.clear();
+    modified.set("CHANGED_VAR", { oldValue: "old", newValue: "new" });
     expect(hasChanges(changes)).toBe(true);
   });
 });

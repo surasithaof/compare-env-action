@@ -7,7 +7,7 @@ export default defineConfig({
     coverage: {
       enabled: true,
       provider: "v8", // or 'istanbul'
-      reporter: ["text", "json-summary", "json"],
+      reporter: ["text", "json-summary", "json", "html"],
       thresholds: {
         lines: 80,
         branches: 80,
