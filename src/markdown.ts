@@ -14,7 +14,7 @@ export function generateMarkdown(changes: EnvChange, header: string = "") {
 
   if (changes.added.size > 0) {
     markdown += "**New Environment Variables**\n\n";
-    for (const [key, _] of changes.added) {
+    for (const [key] of changes.added) {
       markdown += formatNewVar(key);
     }
     markdown += "\n";
@@ -22,7 +22,7 @@ export function generateMarkdown(changes: EnvChange, header: string = "") {
 
   if (changes.removed.size > 0) {
     markdown += "**Removed Environment Variables**\n\n";
-    for (const [key, _] of changes.removed) {
+    for (const [key] of changes.removed) {
       markdown += formatRemovedVar(key);
     }
     markdown += "\n";

@@ -79,9 +79,7 @@ class GithubAPI {
     if (ref) {
       url += `?ref=${ref}`;
     }
-    return this.request<GithubFileContent | null>(
-      `/repos/${repo}/contents/${path}`,
-    );
+    return this.request<GithubFileContent | null>(url);
   }
 }
 
