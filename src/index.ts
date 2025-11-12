@@ -31,28 +31,46 @@ async function compare(
 
   // if baseRef is "latest", fetch the latest release tag
   if (baseRef === DEFAULT.baseRef) {
-    const latestRelease = await ghClient.rest.repos.getLatestRelease({
-      owner: owner,
-      repo: repoName,
-    });
-    if (!latestRelease) {
-      // consider all changes if no release found
-      const content = await ghClient.rest.repos.getContent({
+    const latestRelease = await ghClient.rest.repos
+      .getLatestRelease({
         owner: owner,
         repo: repoName,
-        path: fileToCompare,
-        ref: headRef,
+      })
+      .catch((error) => {
+        if (error.status === 404) {
+          return null;
+        }
+        throw error;
       });
+
+    // if not found latest release, consider all changes from the beginning
+    if (!latestRelease) {
+      const content = await ghClient.rest.repos
+        .getContent({
+          owner: owner,
+          repo: repoName,
+          path: fileToCompare,
+          ref: headRef,
+        })
+        .catch((error) => {
+          if (error.status === 404) {
+            return null;
+          }
+          throw error;
+        });
+
       if (!content?.data) {
         throw new Error(
           `Unable to fetch file content: ${fileToCompare} at reference: ${headRef}. Please ensure the file exists in the repository.`,
         );
       }
+
       if (!("content" in content.data)) {
         throw new Error(
           `The path: ${fileToCompare} is not a file in the repository.`,
         );
       }
+
       const diff = Buffer.from(
         content.data.content,
         content.data.encoding as BufferEncoding,
@@ -63,7 +81,6 @@ async function compare(
     }
     baseRef = latestRelease.data.tag_name;
   }
-  // if not found latest release, consider all changes from the beginning
 
   // Get diff from GitHub API
   const diffData = await ghClient.rest.repos.compareCommits({
