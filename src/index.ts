@@ -88,21 +88,31 @@ async function main() {
       fileToCompare,
     );
 
-    if (!hasChanges(changes)) {
-      process.env.GITHUB_ACTIONS && setOutput("has-changes", "false");
+    const hasChangesFlag = hasChanges(changes);
+    if (process.env.GITHUB_ACTIONS) {
+      setOutput("has-changes", hasChangesFlag ? "true" : "false");
+    }
+
+    if (!hasChangesFlag) {
       console.log("No changes detected.");
       return;
     }
 
     const changelog = generateMarkdown(changes);
-    process.env.GITHUB_ACTIONS && setOutput("has-changes", "true");
-    process.env.GITHUB_ACTIONS && setOutput("changelog", changelog);
+    if (process.env.GITHUB_ACTIONS) {
+      setOutput("changelog", changelog);
+    }
 
     console.log("Changelog:");
     console.log(changelog);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error(`Error processing changes: ${error.message}`);
-    process.env.GITHUB_ACTIONS && setFailed(error.message);
+
+    if (process.env.GITHUB_ACTIONS) {
+      setFailed(error.message);
+    }
+
     process.exit(1);
   }
 }
